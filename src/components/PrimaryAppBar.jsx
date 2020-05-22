@@ -1,5 +1,4 @@
 import React from "react"
-import { fade, makeStyles } from "@material-ui/core/styles"
 import AppBar from "@material-ui/core/AppBar"
 import Toolbar from "@material-ui/core/Toolbar"
 import IconButton from "@material-ui/core/IconButton"
@@ -9,75 +8,21 @@ import Badge from "@material-ui/core/Badge"
 import MenuItem from "@material-ui/core/MenuItem"
 import Menu from "@material-ui/core/Menu"
 import SearchIcon from "@material-ui/icons/Search"
+import InputLabel from "@material-ui/core/InputLabel"
+import FormControl from "@material-ui/core/FormControl"
+import Select from "@material-ui/core/Select"
 import AccountCircle from "@material-ui/icons/AccountCircle"
 import ShoppingBasketIcon from "@material-ui/icons/ShoppingBasket"
 import MoreIcon from "@material-ui/icons/MoreVert"
-
-const useStyles = makeStyles((theme) => ({
-  grow: {
-    flexGrow: 1,
-  },
-  menuButton: {
-    marginRight: theme.spacing(2),
-  },
-  title: {
-    display: "none",
-    [theme.breakpoints.up("sm")]: {
-      display: "block",
-    },
-  },
-  search: {
-    position: "relative",
-    borderRadius: theme.shape.borderRadius,
-    backgroundColor: fade(theme.palette.common.white, 0.15),
-    "&:hover": {
-      backgroundColor: fade(theme.palette.common.white, 0.25),
-    },
-    marginRight: theme.spacing(2),
-    marginLeft: 0,
-    width: "100%",
-    [theme.breakpoints.up("sm")]: {
-      marginLeft: theme.spacing(3),
-      width: "auto",
-    },
-  },
-  searchIcon: {
-    padding: theme.spacing(0, 2),
-    height: "100%",
-    position: "absolute",
-    pointerEvents: "none",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  inputRoot: {
-    color: "inherit",
-  },
-  inputInput: {
-    padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-    transition: theme.transitions.create("width"),
-    width: "100%",
-    [theme.breakpoints.up("md")]: {
-      width: "20ch",
-    },
-  },
-  sectionDesktop: {
-    display: "none",
-    [theme.breakpoints.up("md")]: {
-      display: "flex",
-    },
-  },
-  sectionMobile: {
-    display: "flex",
-    [theme.breakpoints.up("md")]: {
-      display: "none",
-    },
-  },
-}))
+import { ContextApp } from "../store/reducer"
+import { useStyles } from "../styles/primaryAppBar"
+// CUSTOM MODALS
+import CartModal from "./CartModal"
 
 export default function PrimarySearchAppBar() {
   const classes = useStyles()
+  const { state, dispatch } = React.useContext(ContextApp)
+  const { currency, cart } = state
   const [anchorEl, setAnchorEl] = React.useState(null)
   const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null)
 
@@ -99,6 +44,14 @@ export default function PrimarySearchAppBar() {
 
   const handleMobileMenuOpen = (event) => {
     setMobileMoreAnchorEl(event.currentTarget)
+  }
+
+  const handleCurrencyChange = ({ target: { value } }) => {
+    dispatch({ type: "SET_CURRENCY", payload: value })
+  }
+
+  const openCartModal = () => {
+    dispatch({ type: "SET_CART_MODAL_VISIBLE", payload: true })
   }
 
   const menuId = "primary-search-account-menu"
@@ -129,8 +82,12 @@ export default function PrimarySearchAppBar() {
       onClose={handleMobileMenuClose}
     >
       <MenuItem>
-        <IconButton aria-label="show 4 new mails" color="inherit">
-          <Badge badgeContent={4} color="secondary">
+        <IconButton
+          aria-label="show quantity of product"
+          color="inherit"
+          onClick={openCartModal}
+        >
+          <Badge badgeContent={cart.length} color="secondary">
             <ShoppingBasketIcon />
           </Badge>
         </IconButton>
@@ -148,6 +105,34 @@ export default function PrimarySearchAppBar() {
         <p>Profile</p>
       </MenuItem>
     </Menu>
+  )
+
+  const currencySelect = (
+    <FormControl variant="outlined" className={classes.formControl}>
+      <InputLabel
+        id="demo-simple-select-outlined-label"
+        className={classes.select}
+      >
+        Currency
+      </InputLabel>
+      <Select
+        labelId="demo-simple-select-outlined-label"
+        id="demo-simple-select-outlined"
+        value={currency}
+        onChange={handleCurrencyChange}
+        label="Currency"
+        variant="filled"
+        inputProps={{
+          classes: {
+            root: classes.select,
+            icon: classes.icon,
+          },
+        }}
+      >
+        <MenuItem value={"USA"}>USA</MenuItem>
+        <MenuItem value={"EUR"}>EUR</MenuItem>
+      </Select>
+    </FormControl>
   )
 
   return (
@@ -170,10 +155,15 @@ export default function PrimarySearchAppBar() {
               inputProps={{ "aria-label": "search" }}
             />
           </div>
+          {currencySelect}
           <div className={classes.grow} />
           <div className={classes.sectionDesktop}>
-            <IconButton aria-label="show 4 new mails" color="inherit">
-              <Badge badgeContent={4} color="secondary">
+            <IconButton
+              aria-label="show 4 new mails"
+              color="inherit"
+              onClick={openCartModal}
+            >
+              <Badge badgeContent={cart.length} color="secondary">
                 <ShoppingBasketIcon />
               </Badge>
             </IconButton>
@@ -203,6 +193,7 @@ export default function PrimarySearchAppBar() {
       </AppBar>
       {renderMobileMenu}
       {renderMenu}
+      <CartModal />
     </div>
   )
 }
